@@ -649,9 +649,12 @@ int IGameController::GetAutoTeam(int NotThisID)
 		}
 	}
 
-	int Team = 0;
-	if(IsTeamplay())
-		Team = aNumplayers[TEAM_RED] > aNumplayers[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
+	srand(Server()->Tick());
+	int Team = rand() % 2;
+	if(IsTeamplay()) {
+		if(aNumplayers[TEAM_RED] > aNumplayers[TEAM_BLUE]) Team = TEAM_BLUE;
+		else if(aNumplayers[TEAM_BLUE] > aNumplayers[TEAM_RED]) Team = TEAM_RED;
+	}
 
 	if(CanJoinTeam(Team, NotThisID))
 		return Team;
