@@ -104,7 +104,7 @@ private:
 	int m_LastWeapon;
 	int m_QueuedWeapon;
 
-	int m_ReloadTimer;
+	int m_ReloadTimer[NUM_WEAPONS];
 	int m_AttackTick;
 
 	int m_EmoteType;

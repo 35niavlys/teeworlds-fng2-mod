@@ -182,7 +182,7 @@ void CCharacter::HandleFreeze()
 void CCharacter::DoWeaponSwitch()
 {
 	// make sure we can switch
-	if(m_ReloadTimer != 0 || m_QueuedWeapon == -1)
+	if(m_QueuedWeapon == -1)
 		return;
 
 	// switch Weapon
@@ -236,7 +236,7 @@ bool CCharacter::IsFrozen(){
 
 void CCharacter::FireWeapon()
 {
-	if(m_ReloadTimer != 0 || (IsFrozen() && m_Freeze.m_ActivationTick != Server()->Tick()))
+	if(m_ReloadTimer[m_ActiveWeapon] != 0 || (IsFrozen() && m_Freeze.m_ActivationTick != Server()->Tick()))
 		return;
 
 	DoWeaponSwitch();
@@ -262,7 +262,7 @@ void CCharacter::FireWeapon()
 	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
 		// 125ms is a magical limit of how fast a human can click
-		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
+		m_ReloadTimer[m_ActiveWeapon] = 125 * Server()->TickSpeed() / 1000;
 		if(m_LastNoAmmoSound+Server()->TickSpeed() <= Server()->Tick())
 		{
 			GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO);
@@ -305,7 +305,7 @@ void CCharacter::FireWeapon()
 
 			// if we Hit anything, we have to wait for the reload
 			if(Hits)
-				m_ReloadTimer = Server()->TickSpeed()/3;
+				m_ReloadTimer[m_ActiveWeapon] = Server()->TickSpeed()/3;
 
 		} break;
 
@@ -376,16 +376,16 @@ void CCharacter::FireWeapon()
 	if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0) // -1 == unlimited
 		m_aWeapons[m_ActiveWeapon].m_Ammo--;
 
-	if(!m_ReloadTimer)
-		m_ReloadTimer = WeaponFireDelay;
+	if(!m_ReloadTimer[m_ActiveWeapon])
+		m_ReloadTimer[m_ActiveWeapon] = WeaponFireDelay;
 }
 
 void CCharacter::HandleWeapons()
 {
 	// check reload timer
-	if(m_ReloadTimer)
+	if(m_ReloadTimer[m_ActiveWeapon])
 	{
-		m_ReloadTimer--;
+		m_ReloadTimer[m_ActiveWeapon]--;
 		return;
 	}
 
@@ -397,7 +397,7 @@ void CCharacter::HandleWeapons()
 	if(AmmoRegenTime)
 	{
 		// If equipped and not active, regen ammo?
-		if (m_ReloadTimer <= 0)
+		if (m_ReloadTimer[m_ActiveWeapon] <= 0)
 		{
 			if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
 				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
