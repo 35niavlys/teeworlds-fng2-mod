@@ -112,6 +112,7 @@ public:
 	virtual bool CheckForConnectingPlayers(int GameID) = 0;
 	
 	virtual struct sGame* GetGame(int GameID) = 0;
+	virtual int GetLastTeam(const char* PlayerName) = 0;
 
 };
 
@@ -146,6 +147,8 @@ public:
 	virtual const char *GameType() = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
+	virtual int GetPlayerTeam(int ClientID) = 0;
+	virtual const char *GetPlayerName(int ClientID) = 0;
 };
 
 extern IGameServer *CreateGameServer();

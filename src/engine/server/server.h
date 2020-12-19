@@ -143,6 +143,8 @@ public:
 	};
 
 	CClient m_aClients[MAX_CLIENTS];
+	int lastRoundClientsTeam[MAX_CLIENTS];
+	char lastRoundClientsName[MAX_CLIENTS][64];
 
 	CSnapshotDelta m_SnapshotDelta;
 	CSnapshotBuilder m_SnapshotBuilder;
@@ -272,6 +274,7 @@ public:
 	virtual bool CheckForConnectingPlayers(int GameID);
 
 	virtual struct sGame* GetGame(int GameID);
+	virtual int GetLastTeam(const char* PlayerName);
 
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);

@@ -216,6 +216,8 @@ public:
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
+	int GetPlayerTeam(int ClientID);
+	virtual const char *GetPlayerName(int ClientID);
 
 	int m_LockTeams;
 

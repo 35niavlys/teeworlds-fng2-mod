@@ -113,6 +113,21 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 	return m_apPlayers[ClientID]->GetCharacter();
 }
 
+
+int CGameContext::GetPlayerTeam(int ClientID)
+{
+	if(ClientID < 0 || ClientID >= MAX_CLIENTS || !m_apPlayers[ClientID])
+		return 0;
+	return m_apPlayers[ClientID]->GetTeam();
+}
+
+const char *CGameContext::GetPlayerName(int ClientID)
+{
+	if(ClientID < 0 || ClientID >= MAX_CLIENTS || !m_apPlayers[ClientID])
+		return 0;
+	return Server()->ClientName(ClientID);
+}
+
 void CGameContext::MakeLaserTextPoints(vec2 pPos, int pOwner, int pPoints){
 	char text[10];
 	if(pPoints >= 0) str_format(text, 10, "+%d", pPoints);
@@ -641,6 +656,17 @@ void CGameContext::OnClientEnter(int ClientID)
 {
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->Respawn();
+
+
+	int last = Server()->GetLastTeam(Server()->ClientName(ClientID));
+        if (last > -2)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "Last team of '%s' was %d", Server()->ClientName(ClientID), last);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		m_apPlayers[ClientID]->SetTeamSilent(last);
+	}
+
 	if(!m_Config->m_SvTournamentMode || m_pController->IsGameOver()) {
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetTeam()));

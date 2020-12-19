@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <string.h>
 #include <base/math.h>
 #include <base/system.h>
 
@@ -1850,6 +1851,22 @@ int CServer::Run()
 				// load map
 				if(LoadMap(g_Config.m_SvMap))
 				{
+					// save last players
+					for(int c = 0; c < MAX_CLIENTS; c++)
+					{
+						if(m_aClients[c].m_State == CClient::STATE_EMPTY)
+						{
+							lastRoundClientsTeam[c] = -2;
+							continue;
+						}
+
+						str_format(aBuf, sizeof(aBuf), "Saving team: '%s' was in %d", lastRoundClientsName[c], lastRoundClientsTeam[c]);
+						Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+						lastRoundClientsTeam[c] = GameServer()->GetPlayerTeam(c);
+						str_format(lastRoundClientsName[c], sizeof(lastRoundClientsName[c]), "%s", GameServer()->GetPlayerName(c));
+					}
+
 					// new map loaded
 					GameServer()->OnShutdown();
 
@@ -2447,6 +2464,19 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 }
 
 static CServer *CreateServer() { return new CServer(); }
+
+
+int CServer::GetLastTeam(const char* PlayerName)
+{
+	for(int c = 0; c < MAX_CLIENTS; ++c)
+	{
+		if(strcmp(PlayerName, lastRoundClientsName[c]) == 0)
+		{
+			return lastRoundClientsTeam[c];
+		}
+	}
+	return -2;
+}
 
 int main(int argc, const char **argv) // ignore_convention
 {
