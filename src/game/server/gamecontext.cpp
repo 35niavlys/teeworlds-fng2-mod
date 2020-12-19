@@ -688,15 +688,6 @@ void CGameContext::OnClientEnter(int ClientID)
 		m_apPlayers[ClientID]->SetTeamSilent(last);
 	}
 
-	int last = Server()->GetLastTeam(Server()->ClientName(ClientID));
-        if (last > -2)
-	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "Last team of '%s' was %d", Server()->ClientName(ClientID), last);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-		m_apPlayers[ClientID]->SetTeamSilent(last);
-	}
-
 	if(!m_Config->m_SvTournamentMode || m_pController->IsGameOver()) {
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetTeam()));
