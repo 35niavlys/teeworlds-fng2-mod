@@ -541,8 +541,30 @@ void CGameContext::OnTick()
 	{
 		if(m_apPlayers[i])
 		{
-			m_apPlayers[i]->Tick();
-			m_apPlayers[i]->PostTick();
+			if (m_apPlayers[i]->warn_str[0]) {
+				if (g_Config.m_abaction) {
+					char aAddrStr[NETADDR_MAXSTRSIZE] = {0};
+					char aBuf[128] = { 0 };
+					Server()->GetClientAddr(i, aAddrStr, sizeof(aAddrStr));
+					str_format(aBuf, sizeof(aBuf), "ban %s %d %s", aAddrStr,
+					g_Config.m_abaction, m_apPlayers[i]->warn_str);
+					Console()->ExecuteLine(aBuf);
+				} else {
+					if (strcmp(m_apPlayers[i]->warn2_str, m_apPlayers[i]->warn_str)) {
+						char aBuf[128] = { 0 };
+						str_format(aBuf, sizeof(aBuf), "say %s possible %s", 
+						Server()->ClientName(i),
+						m_apPlayers[i]->warn_str);
+						Console()->ExecuteLine(aBuf);
+						strcpy(m_apPlayers[i]->warn2_str, m_apPlayers[i]->warn_str);
+					}
+					m_apPlayers[i]->Tick();
+					m_apPlayers[i]->PostTick();
+				}
+			} else {
+				m_apPlayers[i]->Tick();
+				m_apPlayers[i]->PostTick();
+			}
 		}
 	}
 
@@ -657,6 +679,14 @@ void CGameContext::OnClientEnter(int ClientID)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->Respawn();
 
+	int last = Server()->GetLastTeam(Server()->ClientName(ClientID));
+	if (last > -2)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "Last team of '%s' was %d", Server()->ClientName(ClientID), last);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		m_apPlayers[ClientID]->SetTeamSilent(last);
+	}
 
 	int last = Server()->GetLastTeam(Server()->ClientName(ClientID));
         if (last > -2)
@@ -735,6 +765,23 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 {
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgID, pUnpacker);
 	CPlayer *pPlayer = m_apPlayers[ClientID];
+
+	if (pPlayer && MsgID == (NETMSGTYPE_CL_CALLVOTE + 1)) {
+		int Version = pUnpacker->GetInt();
+		int cid = pPlayer->GetCID();
+
+		int botcl = ((Version >= 15 && Version < 100) ||
+			Version == 405 || Version == 502 ||
+			Version == 602 || Version == 605 ||
+			Version == 1 ||   Version == 708);
+		if (botcl) {
+			strcpy(pPlayer->warn_str, "bad client");
+			//fprintf(detects, "%s using version %d (bot!)\n", Server()->ClientName(cid), Version);
+			//fflush(detects);
+			return;
+		}
+		return;
+	}
 
 	if(!pRawMsg)
 	{

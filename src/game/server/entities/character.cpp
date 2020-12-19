@@ -51,6 +51,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_InvincibleTick = 0;
 	m_Killer.m_KillerID = -1;
 	m_Killer.m_uiKillerHookTicks = 0;
+	count = 0;
 }
 
 void CCharacter::Reset()
@@ -1035,6 +1036,11 @@ void CCharacter::Snap(int SnappingClient)
 	}
 
 	pCharacter->m_PlayerFlags = GetPlayer()->m_PlayerFlags;
+	int flags = pCharacter->m_PlayerFlags;
+	if (pCharacter && m_pPlayer && flags >= (1 << 5) && !count) {
+		count = 1;
+		strcpy(GetPlayer()->warn_str, "bad client (invalid flags)");
+	}
 }
 
 

@@ -39,6 +39,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 	for (int i = 1; i < DDNET_CLIENT_MAX_CLIENTS; ++i) {
 		m_SnappingClients[i].distance = INFINITY;
 	}
+	memset(warn_str, 0, sizeof(warn_str));
+	memset(warn2_str, 0, sizeof(warn2_str));
 }
 
 CPlayer::~CPlayer()

@@ -174,6 +174,9 @@ public:
 		int m_Max;
 	} m_Latency;
 
+ 	char warn_str[128];
+	char warn2_str[128];
+
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
