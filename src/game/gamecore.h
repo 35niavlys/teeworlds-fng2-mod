@@ -118,23 +118,24 @@ inline vec2 CalcPos(vec2 Pos, vec2 Velocity, float Curvature, float Speed, float
 template<typename T>
 inline T SaturatedAdd(T Min, T Max, T Current, T Modifier)
 {
+	T Old = Current;
 	if(Modifier < 0)
 	{
 		if(Current < Min)
-			return Current;
+			return Current - Old;
 		Current += Modifier;
 		if(Current < Min)
 			Current = Min;
-		return Current;
+		return Current - Old;
 	}
 	else
 	{
 		if(Current > Max)
-			return Current;
+			return Current - Old;
 		Current += Modifier;
 		if(Current > Max)
 			Current = Max;
-		return Current;
+		return Current - Old;
 	}
 }
 
@@ -179,7 +180,7 @@ class CCharacterCore
 public:
 	vec2 m_Pos;
 	vec2 m_Vel;
-
+	vec2 m_VelDiff; // caused by external forces, applied on posttick
 	vec2 m_HookPos;
 	vec2 m_HookDir;
 	int m_HookTick;
@@ -208,6 +209,8 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
+	void PostTick();
+	void PostTick(bool IsClient);
 	void Move();
 
 	void Read(const CNetObj_CharacterCore *pObjCore);

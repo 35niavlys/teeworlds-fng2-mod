@@ -65,6 +65,7 @@ void CCharacterCore::Reset()
 {
 	m_Pos = vec2(0,0);
 	m_Vel = vec2(0,0);
+	m_VelDiff = vec2(0,0);
 	m_HookPos = vec2(0,0);
 	m_HookDir = vec2(0,0);
 	m_HookTick = 0;
@@ -161,9 +162,9 @@ void CCharacterCore::Tick(bool UseInput)
 
 	// add the speed modification according to players wanted direction
 	if(m_Direction < 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
+		m_Vel.x += SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
 	if(m_Direction > 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
+		m_Vel.x += SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
 	if(m_Direction == 0)
 		m_Vel.x *= Friction;
 
@@ -352,12 +353,12 @@ void CCharacterCore::Tick(bool UseInput)
 					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
 
 					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
+					pCharCore->m_VelDiff.x += SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
+					pCharCore->m_VelDiff.y += SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
 
 					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					m_Vel.x += SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
+					m_Vel.y += SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
 				}
 			}
 		}
@@ -366,6 +367,14 @@ void CCharacterCore::Tick(bool UseInput)
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
 		m_Vel = normalize(m_Vel) * 6000;
+}
+
+void CCharacterCore::PostTick()
+{
+	// apply velocity difference caused by external forces AFTER the tick
+	// to prevent errors in physics calculation (e.g different hook strengths)
+	m_Vel += m_VelDiff;
+	m_VelDiff = vec2(0, 0);
 }
 
 void CCharacterCore::Move()
