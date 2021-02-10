@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 file(STRINGS src/game/version.h VERSION_LINE
   LIMIT_COUNT 1
@@ -17,10 +17,6 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
-if(POLICY CMP0072)
-  cmake_policy(SET CMP0072 OLD)
-endif()
-
 if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
@@ -31,9 +27,9 @@ endif()
 
 if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
-  project(teeworlds VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+  project(fng VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 else()
-  project(teeworlds)
+  project(fng)
   set(PROJECT_VERSION_MAJOR ${VERSION_MAJOR})
   set(PROJECT_VERSION_MINOR ${VERSION_MINOR})
   set(PROJECT_VERSION_PATCH ${VERSION_PATCH})
@@ -77,7 +73,7 @@ if(TARGET_OS STREQUAL "windows")
 endif()
 
 option(DOWNLOAD_DEPENDENCIES "Download dependencies (only available on Windows)" ${AUTO_DEPENDENCIES_DEFAULT})
-option(DOWNLOAD_GTEST "Download and compile GTest if not found" ${AUTO_DEPENDENCIES_DEFAULT})
+option(DOWNLOAD_GTEST "Download and compile GTest if not found" OFF)
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 
@@ -443,6 +439,59 @@ if(NOT CRYPTO_FOUND)
 endif()
 
 ########################################################################
+# DATA
+########################################################################
+
+set(EXPECTED_DATA
+  maps/4TeamsFNG_random.map
+  maps/4TeamsFNG.map
+  maps/AliveFNG.map
+  maps/IIT_Edited.map
+  maps/openfng5Beat.map
+  mapres/desert_mountains.png
+  mapres/winter_doodads.png
+  mapres/moon.png
+  mapres/mountains.png
+  mapres/grass_main.png
+  mapres/jungle_doodads.png
+  mapres/stars.png
+  mapres/desert_main.png
+  mapres/winter_mountains3.png
+  mapres/winter_mountains.png
+  mapres/generic_unhookable.png
+  mapres/winter_main.png
+  mapres/jungle_deathtiles.png
+  mapres/jungle_background.png
+  mapres/bg_cloud3.png
+  mapres/desert_doodads.png
+  mapres/sun.png
+  mapres/jungle_main.png
+  mapres/bg_cloud2.png
+  mapres/winter_mountains2.png
+  mapres/jungle_midground.png
+  mapres/desert_mountains2.png
+  mapres/snow.png
+  mapres/jungle_unhookables.png
+  mapres/desert_sun.png
+  mapres/bg_cloud1.png
+  mapres/grass_doodads.png
+  mapres/generic_deathtiles.png
+)
+
+set_glob(DATA GLOB_RECURSE "png;map" data ${EXPECTED_DATA})
+
+########################################################################
+# COPY DATA AND DLLS
+########################################################################
+
+foreach(datafile ${DATA})
+  file(RELATIVE_PATH OUT ${PROJECT_SOURCE_DIR}/data ${datafile})
+  get_filename_component(DESTINATION data/${OUT} PATH)
+  file(MAKE_DIRECTORY ${DESTINATION})
+  file(COPY ${datafile} DESTINATION ${DESTINATION})
+endforeach()
+
+########################################################################
 # CODE GENERATION
 ########################################################################
 
@@ -468,7 +517,7 @@ function(generate_source output_file script_parameter)
   )
 endfunction()
 
-file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/src/generated/")
+file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/src/game/generated/")
 if(GIT_FOUND)
   execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --git-dir
     ERROR_QUIET
@@ -483,16 +532,16 @@ if(GIT_FOUND)
     )
   endif()
 endif()
-chash("src/generated/nethash.cpp"
+chash("src/game/generated/nethash.cpp"
   "src/engine/shared/protocol.h"
   "src/game/tuning.h"
   "src/game/gamecore.cpp"
-  "${PROJECT_BINARY_DIR}/src/generated/protocol.h"
+  "${PROJECT_BINARY_DIR}/src/game/generated/protocol.h"
 )
-generate_source("src/generated/protocol.cpp" "network_source")
-generate_source("src/generated/protocol.h" "network_header")
-generate_source("src/generated/server_data.cpp" "server_content_source")
-generate_source("src/generated/server_data.h" "server_content_header")
+generate_source("src/game/generated/protocol.cpp" "network_source")
+generate_source("src/game/generated/protocol.h" "network_header")
+generate_source("src/game/generated/server_data.cpp" "server_content_source")
+generate_source("src/game/generated/server_data.h" "server_content_header")
 
 
 ########################################################################
@@ -583,7 +632,7 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   snapshot.h
   storage.cpp
 )
-set(ENGINE_GENERATED_SHARED src/generated/nethash.cpp src/generated/protocol.cpp src/generated/protocol.h)
+set(ENGINE_GENERATED_SHARED src/game/generated/nethash.cpp src/game/generated/protocol.cpp src/game/generated/protocol.h)
 set_src(GAME_SHARED GLOB src/game
   collision.cpp
   collision.h
@@ -599,8 +648,8 @@ set_src(GAME_SHARED GLOB src/game
   voting.h
 )
 set(GAME_GENERATED_SHARED
-  src/generated/nethash.cpp
-  src/generated/protocol.h
+  src/game/generated/nethash.cpp
+  src/game/generated/protocol.h
 )
 
 set(DEPS ${DEP_MD5} ${ZLIB_DEP})
@@ -664,12 +713,12 @@ set_src(GAME_SERVER GLOB_RECURSE src/game/server
   player.h
 )
 set(GAME_GENERATED_SERVER
-  src/generated/server_data.cpp
-  src/generated/server_data.h
+  src/game/generated/server_data.cpp
+  src/game/generated/server_data.h
 )
 set(SERVER_SRC ${ENGINE_SERVER} ${GAME_SERVER} ${GAME_GENERATED_SERVER})
 if(TARGET_OS STREQUAL "windows")
-  set(SERVER_ICON "other/icons/${SERVER_EXECUTABLE}.rc")
+ # set(SERVER_ICON "other/icons/${SERVER_EXECUTABLE}.rc")
 else()
   set(SERVER_ICON)
 endif()
@@ -705,7 +754,7 @@ endif()
 
 set_src(MASTERSRV_SRC GLOB src/mastersrv mastersrv.cpp mastersrv.h)
 set_src(VERSIONSRV_SRC GLOB src/versionsrv mapversions.h versionsrv.cpp versionsrv.h)
-list(APPEND VERSIONSRV_SRC ${PROJECT_BINARY_DIR}/src/generated/nethash.cpp)
+list(APPEND VERSIONSRV_SRC ${PROJECT_BINARY_DIR}/src/game/generated/nethash.cpp)
 
 set(TARGET_MASTERSRV mastersrv)
 set(TARGET_VERSIONSRV versionsrv)
@@ -853,12 +902,15 @@ set(CPACK_TARGETS
 )
 set(CPACK_DIRS ${PROJECT_BINARY_DIR}/data)
 set(CPACK_FILES
+  fng.cfg
   license.txt
   storage.cfg
-  ${COPY_FILES}
 )
 if(TARGET_OS STREQUAL "windows")
   list(APPEND CPACK_FILES other/config_directory.bat)
+endif()
+if(UNIX)
+  list(APPEND CPACK_FILES start.sh)
 endif()
 
 if(NOT DEV)
