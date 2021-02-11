@@ -50,7 +50,7 @@ public:
 	void Die(int Killer, int Weapon);
 
 	void DieSpikes(int pPlayerID, int spikes_flag);
-	bool IsFalseSpike(int Team, int spike_flag);
+	bool IsFalseSpike(int numTeams, int Team, int spike_flag);
 
 	void Hit(int Killer, int Weapon);
 	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);

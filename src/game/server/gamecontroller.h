@@ -64,6 +64,7 @@ protected:
 	int m_RoundCount;
 
 	int m_GameFlags;
+	int m_NumTeams;
 	int m_UnbalancedTick;
 	bool m_ForceBalanced;
 
@@ -71,6 +72,8 @@ public:
 	const char *m_pGameType;
 
 	CConfiguration* GetConfig() { return &m_Config; }
+
+	int GetNumberTeams() { return m_NumTeams; }
 	
 	bool IsTeamplay() const;
 	bool IsGameOver() const { return m_GameOverTick != -1; }
