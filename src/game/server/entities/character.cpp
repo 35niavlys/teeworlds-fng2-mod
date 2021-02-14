@@ -383,11 +383,13 @@ void CCharacter::FireWeapon()
 void CCharacter::HandleWeapons()
 {
 	// check reload timer
-	if(m_ReloadTimer[m_ActiveWeapon])
-	{
-		m_ReloadTimer[m_ActiveWeapon]--;
-		return;
+	int wait = m_ReloadTimer[m_ActiveWeapon];
+	for (int i = NUM_WEAPONS; i-- > 0 ;) {
+		if(m_ReloadTimer[i])
+			m_ReloadTimer[i]--;
 	}
+	if(wait)
+		return;
 
 	// fire Weapon, if wanted
 	FireWeapon();
